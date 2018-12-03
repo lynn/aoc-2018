@@ -14,15 +14,14 @@ rect =. monad : 0
 )
 
 NB. Part A: How many squares covered by overlap?
-NB. Sum all the rects and count >1s.
+NB. (Sum all the rects and count >1s.)
 total =. +/ > rect each data
 echo +/, total>1
 
 NB. Part B: Which ID doesn't overlap anything?
-NB. Retrieve all the rects back from the total and check which is all 1s.
+NB. (Retrieve all the rects back from the total and check which is all 1s.)
 check =. dyad : 0
   'I X Y W H' =. y
   I* */,1= (H,W) {. (Y,X) |. x
 )
-
 echo >./ >(total&check) each data
