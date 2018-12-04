@@ -1,3 +1,6 @@
+// https://adventofcode.com/2018/day/4 in F#.
+// Try it here: https://tio.run/#fs-core
+
 open System
 open System.Text.RegularExpressions
 open System.Collections.Generic
