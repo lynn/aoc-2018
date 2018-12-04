@@ -2,25 +2,24 @@ open System
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
-// A helper to update a Dictionary with some default value.
+// A helper to update a Dictionary with a function and some default value.
 let update (dict: Dictionary<'K, 'V>) (key: 'K) (updater: 'V -> 'V) (defaultValue: 'V): unit =
     dict.[key] <- updater (if dict.ContainsKey key then dict.[key] else defaultValue)
 
 type GuardID = int
-type Time = DateTime
 type Event =
-    | BeginShift of GuardID * Time
-    | Sleep of Time
-    | Wake of Time
+    | BeginShift of GuardID * DateTime
+    | Sleep of DateTime
+    | Wake of DateTime
 
-let timeOf: Event -> Time = function
+let timeOf: Event -> DateTime = function
     | BeginShift (_, t) -> t
     | Wake t            -> t
     | Sleep t           -> t
 
 // Parse a single line of the input.
 let parseEvent (line: string): Event =
-    let m    = Regex.Match(line, @"\[(1518-\d{2}-\d{2} \d{2}:\d{2})\] (.*)")
+    let m    = Regex.Match(line, @"\[(....-..-.. ..:..)\] (.*)")
     let time = DateTime.Parse m.Groups.[1].Value
     match m.Groups.[2].Value with
     | "falls asleep" -> Sleep time
@@ -38,7 +37,7 @@ let events =
 // We'll write some stateful code to analyze the input.
 type MinuteAsleep = int
 let mutable currentGuard : GuardID = -1
-let mutable sleepStart : Option<Time> = None
+let mutable sleepStart : Option<DateTime> = None
 let mutable totalSleep = new Dictionary<GuardID, int>()
 let mutable sleepSchedule = new Dictionary<GuardID, Dictionary<MinuteAsleep, int>>()
 
@@ -68,7 +67,7 @@ let maxByValue d = Seq.maxBy (fun (KeyValue(_, v)) -> v) d
 let sleepiestGuard = (maxByValue totalSleep).Key
 let sleepiestMinute = (maxByValue sleepSchedule.[sleepiestGuard]).Key
 
-printfn "%A" (sleepiestGuard * sleepiestMinute)
+printfn "%d" (sleepiestGuard * sleepiestMinute)
 
 // Strategy 2: find the most frequent asleep (guard, minute) pair.
 let (reliableGuard, reliableMinute) =
@@ -80,4 +79,4 @@ let (reliableGuard, reliableMinute) =
     )
     |> Seq.maxBy (fun (_, freq) -> freq) |> fst
 
-printfn "%A" (reliableGuard * reliableMinute)
+printfn "%d" (reliableGuard * reliableMinute)
