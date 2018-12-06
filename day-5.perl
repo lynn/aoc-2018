@@ -7,4 +7,4 @@ my $re = join '|', map {$_.uc, uc.$_} a..z;
 my $in = $_ = <>;
 1 while s/$re//g;
 print length, "\n";
-print min map {my $v = $in; 1 while $v =~ s/$re|$_|\U$_//g; length $v} a..z;
+print min map {my $v = $in; 1 while $v =~ s/$re|$_|\u$_//g; length $v} a..z;
