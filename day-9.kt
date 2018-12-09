@@ -45,16 +45,6 @@ class Game(val players: Int, val last_marble: Int) {
         whose_turn = (whose_turn + 1) % players
     }
     
-    // Remove `current` from the cycle, making its right neighbor
-    // current. Return the removed marble's points value.
-    fun pop(): Int {
-        val points = current.points
-        current.left.right = current.right
-        current.right.left = current.left
-        current = current.right
-        return points
-    }
-    
     // Simulate a turn of the game.
     fun turn() {
         val m = next_marble_value()
