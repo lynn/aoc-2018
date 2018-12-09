@@ -8,11 +8,11 @@ class Marble(val points: Int) {
 
     // Insert a marble to the right of this one.
     fun insert_right(points: Int) {
-        val old_right = right
-        right = Marble(points)
-        right.left = this
-        right.right = old_right
-        old_right.left = right
+        val old: Marble = right
+        right = Marble(points)  // ··· ⇆ this → right   old ⇆ ···
+        right.left = this       // ··· ⇆ this ⇆ right   old ⇆ ···
+        right.right = old       // ··· ⇆ this ⇆ right → old ⇆ ···
+        old.left = right        // ··· ⇆ this ⇆ right ⇆ old ⇆ ···
     }
     
     // Remove this marble from the cycle and return its point value.
