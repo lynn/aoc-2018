@@ -14,8 +14,8 @@ instance Applicative (Parser t) where
   (<*>)  = ap
 
 instance Monad (Parser t) where
-  p >>= f = Parser (\s -> concatMap (\(a, s') -> parse (f a) s') $ parse p s)
-
+  p >>= f = Parser (\s -> do (a, s') <- parse p s
+                             parse (f a) s')
 item :: Parser t t
 item = Parser $ \case []     -> []
                       (t:ts) -> [(t,ts)]
