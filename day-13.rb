@@ -16,8 +16,8 @@ class Direction
     end
   end
 
-  def self.parse(ch)
-    case ch
+  def self.parse(character)
+    case character
       when '^' then North.new
       when '>' then East.new
       when 'v' then South.new
