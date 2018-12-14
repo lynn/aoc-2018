@@ -10,7 +10,7 @@ while not (recipes and where):
     i = (i + a[i] + 1) % len(a)
     j = (j + a[j] + 1) % len(a)
 
-    if len(a) >= k + 9:
+    if len(a) >= k + 10:
         recipes = a[k:k+10]
 
     last = ''.join(map(str, a[-7:]))
