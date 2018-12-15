@@ -88,8 +88,8 @@ impl Combatant {
     }
 }
 
-// The outcome of a battle: how many full rounds it lasted, and how many hit
-// points remain in total. (The task asks for the product of these quantities.)
+/// The outcome of a battle: how many full rounds it lasted, and how many hit
+/// points remain in total. (The task asks for the product of these quantities.)
 struct Outcome {
     round: Integer,
     total_hp: HitPoints,
