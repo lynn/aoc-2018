@@ -217,7 +217,7 @@ impl Battlefield {
         for i in 0..self.combatants.len() {
             self.simulate_turn(i);
         }
-        self.combatants.retain(|c| !c.dead());
+        self.combatants.retain(|c| c.alive());
     }
 
     /// Simulate the whole battle and return the outcome.
