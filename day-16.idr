@@ -71,7 +71,9 @@ implementation Eq Opcode where
 
 -- Whew. Anyway, here's how we represent instructions in their most executable form.
 data Source = Imm ℤ | Reg Register   -- Where an operand comes from.
-data Instruction = Inst (ℤ -> ℤ -> ℤ) Register Source Source
+
+data Instruction = Inst (ℤ -> ℤ -> ℤ)   Register                     Source Source
+--                      ↑ what to do    ↑ where to put the outcome   ↑ where to get the operands
 
 -- We run them like so (it's pretty straightforward).
 execute : Instruction -> RegisterValues -> RegisterValues
