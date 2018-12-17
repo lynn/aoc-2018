@@ -10,13 +10,15 @@ import Data.Vect
 ℤ : Type
 ℤ = Integer
 
--- Let's describe our machine a little.
+-- Let's describe our machine a little. It has about yea many registers:
 numRegs : Nat
 numRegs = 4
 
+-- Said registers are 0, 1, 2, and 3. Hey, I know what that type is called!!
 Register : Type
 Register = Fin numRegs
 
+-- Their values are represented by a 4-tuple of integers, then.
 RegisterValues : Type
 RegisterValues = Vect numRegs ℤ
 
