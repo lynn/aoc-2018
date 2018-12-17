@@ -40,6 +40,8 @@ eqZ a b = if a == b then 1 else 0
 intToFin : (n : Nat) -> ℤ -> Maybe (Fin n)
 intToFin n z = natToFin (fromIntegerNat z) n
 
+-----------------------------------------------------------------
+
 -- Anyway, here are the opcodes.
 data Opcode = Addr | Addi | Mulr | Muli | Banr | Bani | Borr | Bori
             | Setr | Seti | Gtir | Gtri | Gtrr | Eqir | Eqri | Eqrr
@@ -71,24 +73,25 @@ implementation Eq Opcode where
 
 -- Whew. Anyway, here's how we represent instructions in their most executable form.
 data Source = Imm ℤ | Reg Register   -- Where an operand comes from.
-
 data Instruction = Inst (ℤ -> ℤ -> ℤ)   Register                     Source Source
 --                      ↑ what to do    ↑ where to put the outcome   ↑ where to get the operands
 
+-- For example:  Inst (+) 2 (Reg 1) (Imm 5)  is an instruction to perform  `reg[2] ← reg[1] + 5`.
+
 -- We run them like so (it's pretty straightforward).
 execute : Instruction -> RegisterValues -> RegisterValues
-execute (Inst f c srcA srcB) regs =
-  replaceAt c result regs
+execute (Inst f j srcA srcB) rvals =
+  replaceAt j result rvals
     where grab : Source -> ℤ
           grab (Imm i) = i
-          grab (Reg i) = index i regs
+          grab (Reg i) = index i rvals
           result = f (grab srcA) (grab srcB)
 
 -- Now, to actually map Opcode × (ℤ, ℤ, Register) to those high-level Instructions!
 
--- We have some helper functions of type (ℤ -> Maybe Source), which means they try
--- to map a number like 3 into a Source like `Just (Reg (the Register 3))`. But, for
--- example, reg' 7 will yield `Nothing`, 'cause there's no register 7.
+-- We have some helper functions of type (ℤ -> Maybe Source). This one will try to
+-- map a number like 3 into a Source like `Just (Reg (the Register 3))`. But, for
+-- example, `reg' 7` will yield `Nothing`, because there's no register 7.
 reg' : ℤ -> Maybe Source
 reg' = map Reg . intToFin numRegs
 
@@ -115,7 +118,9 @@ toInstruction Eqir (a, b, c) = Inst eqZ   c <$> imm' a <*> reg' b
 toInstruction Eqri (a, b, c) = Inst eqZ   c <$> reg' a <*> imm' b
 toInstruction Eqrr (a, b, c) = Inst eqZ   c <$> reg' a <*> reg' b
 
--- This task involves us piecing together how `Fin 16` maps to our opcodes.
+-----------------------------------------------------------------
+
+-- Okay. This task involves us piecing together how `Fin 16` maps to our opcodes.
 -- Let's describe how that goes:
 
 -- An instruction we haven't yet decoded. What could it be???
@@ -132,6 +137,8 @@ record Sample where
 instructionNumber : Sample -> Fin 16
 instructionNumber s =
   let Mystery n _ = instruction s in n
+-- (FACT: Under the Curry-Howard isomorphism, this function is proof
+-- that I should have probably made `Mystery` a record)
 
 -- Given a sample, return a list of opcodes it *might* be.
 candidates : Sample -> List Opcode
@@ -144,6 +151,8 @@ candidates (MkSample before (Mystery _ abc) after) =
         Just i => execute i before == after   -- Execute `i` and check its work, otherwise.
 
 -- This doesn't fully narrow it down, so it's time to solve SUDOKUS (sort of).
+
+-----------------------------------------------------------------
 
 -- Whittle a mutually exclusive list of candidate lists down to a single assignment.
 -- For example, `sudoku [[a,b,c],[b],[a,b]] == Just [c,b,a]`.
@@ -184,6 +193,8 @@ sudoku = solutionHopefully . untilEquality whittle
 -- (For example, `sudoku [[1,2],[1,2,3]]` stops early, at `[[1,2],[1,2]]`.
 -- Then, `only` will return some `Nothing`s, and the whole `sequence` will fail.)
 
+-----------------------------------------------------------------
+
 -- Anyway, now we can start to figure out the whole mapping:
 OpcodeMapping : Type
 OpcodeMapping = Vect 16 Opcode
@@ -201,6 +212,8 @@ deduceMapping samples = sudoku (map candidateOpcodes range)
 -- (This should always return a "Just" result, if the supplied mapping is correct.)
 reveal : OpcodeMapping -> MysteryInstruction -> Maybe Instruction
 reveal v (Mystery i abc) = toInstruction (index i v) abc
+
+-----------------------------------------------------------------
 
 -- Okay, time to parse the input,
 
@@ -255,6 +268,8 @@ parse (b::i::a::""::rest) =
 
 
 
+
+-----------------------------------------------------------------
 
 -- Okay, this is where the magic happens!!!
 partial
