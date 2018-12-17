@@ -22,7 +22,7 @@ Register = Fin numRegs
 RegisterValues : Type
 RegisterValues = Vect numRegs ℤ
 
--- Oh, it can do these:
+-- Oh, it can do these tricks:
 bAnd : ℤ -> ℤ -> ℤ
 bAnd x y = bitsToInt (intToBits {n=32} x `B.and` intToBits y)
 
@@ -69,20 +69,20 @@ implementation Eq Opcode where
   Eqrr == Eqrr = True
   _ == _ = False
 
--- Whew. Anyway, here's how we represent instructions in their most executable form:
-data Source = Imm ℤ | Reg Register
+-- Whew. Anyway, here's how we represent instructions in their most executable form.
+data Source = Imm ℤ | Reg Register   -- Where an operand comes from.
 data Instruction = Inst (ℤ -> ℤ -> ℤ) Register Source Source
 
 -- We run them like so (it's pretty straightforward).
 execute : Instruction -> RegisterValues -> RegisterValues
-execute (Inst binop c srcA srcB) regs =
+execute (Inst f c srcA srcB) regs =
   replaceAt c result regs
     where grab : Source -> ℤ
           grab (Imm i) = i
           grab (Reg i) = index i regs
-          result = binop (grab srcA) (grab srcB)
+          result = f (grab srcA) (grab srcB)
 
--- Now, to actually map Opcode × (ℤ, ℤ, Register) to those high-level Instructions.
+-- Now, to actually map Opcode × (ℤ, ℤ, Register) to those high-level Instructions!
 
 -- We have some helper functions of type (ℤ -> Maybe Source), which means they try
 -- to map a number like 3 into a Source like `Just (Reg (the Register 3))`. But, for
@@ -131,18 +131,21 @@ instructionNumber : Sample -> Fin 16
 instructionNumber s =
   let Mystery n _ = instruction s in n
 
--- Given a sample, return a list of opcodes it might be.
+-- Given a sample, return a list of opcodes it *might* be.
 candidates : Sample -> List Opcode
 candidates (MkSample before (Mystery _ abc) after) =
   filter fitsSample allOpcodes
   where
     fitsSample op =
       case toInstruction op abc of            -- Try to decode it as `op`...
-        Nothing => False                      -- If that *fails*, then `op` definitely isn't it.
-        Just i => execute i before == after   -- Check execution, otherwise.
+        Nothing => False                      -- If that *fails* (pffft), then `op` definitely isn't right.
+        Just i => execute i before == after   -- Execute `i` and check its work, otherwise.
+
+-- This doesn't fully narrow it down, so it's time to solve SUDOKUS (sort of).
 
 -- Whittle a mutually exclusive list of candidate lists down to a single assignment.
 -- For example, `sudoku [[a,b,c],[b],[a,b]] == Just [c,b,a]`.
+-- (The middle one is b, so we scrap that from the others, and now we've isolated a... etc.)
 sudoku : Eq a => {n : Nat} -> Vect n (List a) -> Maybe (Vect n a)
 sudoku = solutionHopefully . untilEquality whittle
   where
@@ -158,25 +161,28 @@ sudoku = solutionHopefully . untilEquality whittle
     whittle : Eq a => Vect n (List a) -> Vect n (List a)
     whittle boxes = map narrowDown boxes
       where
-        isolated : List a
+        isolated : List a   -- Gather all the values we have on lockdown so far.
         isolated = concat $ filter ((==1) . length) $ toList boxes
 
-        survives : a -> Bool
-        survives y = not (elem y isolated)
+        unisolated : a -> Bool
+        unisolated y = not (elem y isolated)
 
         narrowDown : List a -> List a
-        narrowDown x = if length x == 1 then x else filter survives x
+        narrowDown x = if length x == 1 then x else filter unisolated x
 
     -- Return the only element in a list.
     only : List a -> Maybe a
     only [x] = Just x
     only _ = Nothing
 
-    -- Return a solution, assuming there's only one.
+    -- Return the unique solution, praying there is one.
     solutionHopefully : Vect n (List a) -> Maybe (Vect n a)
     solutionHopefully = sequence . map only
 
--- Now we can start to figure out the whole mapping:
+-- (For example, `sudoku [[1,2],[1,2,3]]` stops early, at `[[1,2],[1,2]]`.
+-- Then, `only` will return some `Nothing`s, and the whole `sequence` will fail.)
+
+-- Anyway, now we can start to figure out the whole mapping:
 OpcodeMapping : Type
 OpcodeMapping = Vect 16 Opcode
 
@@ -190,11 +196,11 @@ deduceMapping samples = sudoku (map candidateOpcodes range)
       in [op | op <- allOpcodes, all (elem op . candidates) relevantSamples]
 
 -- Decode a mystery instruction using a given opcode mapping.
--- (This should always return a "Just" result if the mapping is correct.)
+-- (This should always return a "Just" result, if the supplied mapping is correct.)
 reveal : OpcodeMapping -> MysteryInstruction -> Maybe Instruction
 reveal v (Mystery i abc) = toInstruction (index i v) abc
 
--- Okay, now to parse the input,
+-- Okay, time to parse the input,
 
 
 
